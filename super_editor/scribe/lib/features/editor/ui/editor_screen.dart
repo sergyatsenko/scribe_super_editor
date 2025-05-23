@@ -4,7 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:super_editor/super_editor.dart';
 
 import 'package:scribe/core/theme_provider.dart';
-import 'package:scribe/demos/example_editor/_toolbar.dart' as demo_toolbar;
+import 'package:scribe/features/editor/ui/floating_toolbar.dart'
+    as floating_toolbar;
 import 'package:scribe/features/clipboard/application/clipboard_service.dart';
 import 'package:scribe/features/editor/application/custom_paste_plugin.dart';
 import 'package:scribe/features/editor/application/editor_controller.dart';
@@ -365,7 +366,7 @@ class _EditorScreenState extends State<EditorScreen> {
       return const SizedBox();
     }
 
-    return demo_toolbar.EditorToolbar(
+    return floating_toolbar.EditorToolbar(
       editorViewportKey: _viewportKey,
       anchor: _selectionLayerLinks.expandedSelectionBoundsLink,
       editorFocusNode: _editorFocusNode,
@@ -385,7 +386,7 @@ class _EditorScreenState extends State<EditorScreen> {
       return const SizedBox();
     }
 
-    return demo_toolbar.ImageFormatToolbar(
+    return floating_toolbar.ImageFormatToolbar(
       anchor: _imageSelectionAnchor,
       composer: composer,
       setWidth: (nodeId, width) {

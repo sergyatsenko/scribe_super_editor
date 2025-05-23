@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:scribe/demos/infrastructure/super_editor_item_selector.dart';
+import 'package:scribe/features/editor/infrastructure/toolbar_item_selector.dart';
 import 'package:scribe/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:scribe/l10n/app_localizations.dart';

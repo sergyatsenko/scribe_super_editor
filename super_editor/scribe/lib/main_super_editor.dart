@@ -1,4 +1,3 @@
-import 'package:scribe/demos/example_editor/_example_document.dart';
 import 'package:flutter/material.dart';
 import 'package:scribe/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -44,6 +43,35 @@ void main() {
       ],
       debugShowCheckedModeBanner: false,
     ),
+  );
+}
+
+/// Creates a simple initial document for the demo.
+MutableDocument createInitialDocument() {
+  return MutableDocument(
+    nodes: [
+      ParagraphNode(
+        id: Editor.createNodeId(),
+        text: AttributedText(
+          'Welcome to Super Editor',
+        ),
+        metadata: {
+          'blockType': header1Attribution,
+        },
+      ),
+      ParagraphNode(
+        id: Editor.createNodeId(),
+        text: AttributedText(
+          'This is a demo of the Super Editor package. You can edit this text, add formatting, and more.',
+        ),
+      ),
+      ParagraphNode(
+        id: Editor.createNodeId(),
+        text: AttributedText(
+          'Try selecting some text and using the formatting toolbar that appears.',
+        ),
+      ),
+    ],
   );
 }
 

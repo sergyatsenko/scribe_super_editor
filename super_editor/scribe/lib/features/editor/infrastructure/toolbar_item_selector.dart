@@ -80,10 +80,12 @@ class SuperEditorDemoTextItemSelector extends StatefulWidget {
   final void Function(SuperEditorDemoTextItem? value) onSelected;
 
   @override
-  State<SuperEditorDemoTextItemSelector> createState() => _SuperEditorDemoTextItemSelectorState();
+  State<SuperEditorDemoTextItemSelector> createState() =>
+      _SuperEditorDemoTextItemSelectorState();
 }
 
-class _SuperEditorDemoTextItemSelectorState extends State<SuperEditorDemoTextItemSelector> {
+class _SuperEditorDemoTextItemSelectorState
+    extends State<SuperEditorDemoTextItemSelector> {
   /// Shows and hides the popover.
   final PopoverController _popoverController = PopoverController();
 
@@ -139,15 +141,18 @@ class _SuperEditorDemoTextItemSelectorState extends State<SuperEditorDemoTextIte
     );
   }
 
-  Widget _buildPopoverListItem(BuildContext context, SuperEditorDemoTextItem item, bool isActive, VoidCallback onTap) {
+  Widget _buildPopoverListItem(BuildContext context,
+      SuperEditorDemoTextItem item, bool isActive, VoidCallback onTap) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: isActive ? Colors.grey.withValues(alpha: 0.2) : Colors.transparent,
+        color:
+            isActive ? Colors.grey.withValues(alpha: 0.2) : Colors.transparent,
       ),
       child: InkWell(
         onTap: onTap,
         child: Container(
-          constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
+          constraints:
+              const BoxConstraints(minHeight: kMinInteractiveDimension),
           alignment: Alignment.centerLeft,
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: Text(
@@ -180,7 +185,10 @@ class SuperEditorDemoTextItem {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is SuperEditorDemoTextItem && runtimeType == other.runtimeType && id == other.id;
+      identical(this, other) ||
+      other is SuperEditorDemoTextItem &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
 
   @override
   int get hashCode => id.hashCode;
@@ -263,10 +271,12 @@ class SuperEditorDemoIconItemSelector extends StatefulWidget {
   final void Function(SuperEditorDemoIconItem? value) onSelected;
 
   @override
-  State<SuperEditorDemoIconItemSelector> createState() => _SuperEditorDemoIconItemSelectorState();
+  State<SuperEditorDemoIconItemSelector> createState() =>
+      _SuperEditorDemoIconItemSelectorState();
 }
 
-class _SuperEditorDemoIconItemSelectorState extends State<SuperEditorDemoIconItemSelector> {
+class _SuperEditorDemoIconItemSelectorState
+    extends State<SuperEditorDemoIconItemSelector> {
   /// Shows and hides the popover.
   final PopoverController _popoverController = PopoverController();
 
@@ -280,6 +290,11 @@ class _SuperEditorDemoIconItemSelectorState extends State<SuperEditorDemoIconIte
     super.dispose();
   }
 
+  void _onItemSelected(SuperEditorDemoIconItem? value) {
+    _popoverController.close();
+    widget.onSelected(value);
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopoverScaffold(
@@ -287,31 +302,15 @@ class _SuperEditorDemoIconItemSelectorState extends State<SuperEditorDemoIconIte
       buttonBuilder: _buildButton,
       popoverFocusNode: _popoverFocusNode,
       parentFocusNode: widget.parentFocusNode,
+      boundaryKey: widget.boundaryKey,
       popoverBuilder: (context) => RoundedRectanglePopoverAppearance(
         child: ItemSelectionList<SuperEditorDemoIconItem>(
+          focusNode: _popoverFocusNode,
           value: widget.value,
           items: widget.items,
-          itemBuilder: _buildItem,
+          itemBuilder: _buildPopoverListItem,
           onItemSelected: _onItemSelected,
           onCancel: () => _popoverController.close(),
-          focusNode: _popoverFocusNode,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildItem(BuildContext context, SuperEditorDemoIconItem item, bool isActive, VoidCallback onTap) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: isActive ? Colors.grey.withValues(alpha: 0.2) : Colors.transparent,
-      ),
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Icon(item.icon),
         ),
       ),
     );
@@ -319,17 +318,32 @@ class _SuperEditorDemoIconItemSelectorState extends State<SuperEditorDemoIconIte
 
   Widget _buildButton(BuildContext context) {
     return SuperEditorPopoverButton(
+      padding: const EdgeInsets.all(8),
       onTap: () => _popoverController.open(),
-      padding: const EdgeInsets.only(left: 8.0, right: 24),
       child: widget.value == null //
           ? const SizedBox()
           : Icon(widget.value!.icon),
     );
   }
 
-  void _onItemSelected(SuperEditorDemoIconItem? value) {
-    _popoverController.close();
-    widget.onSelected(value);
+  Widget _buildPopoverListItem(BuildContext context,
+      SuperEditorDemoIconItem item, bool isActive, VoidCallback onTap) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color:
+            isActive ? Colors.grey.withValues(alpha: 0.2) : Colors.transparent,
+      ),
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          constraints:
+              const BoxConstraints(minHeight: kMinInteractiveDimension),
+          width: kMinInteractiveDimension,
+          alignment: Alignment.center,
+          child: Icon(item.icon),
+        ),
+      ),
+    );
   }
 }
 
@@ -350,7 +364,10 @@ class SuperEditorDemoIconItem {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is SuperEditorDemoIconItem && runtimeType == other.runtimeType && id == other.id;
+      identical(this, other) ||
+      other is SuperEditorDemoIconItem &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
 
   @override
   int get hashCode => id.hashCode;
