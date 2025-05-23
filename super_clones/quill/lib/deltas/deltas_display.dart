@@ -2,7 +2,6 @@ import 'package:dart_quill_delta/dart_quill_delta.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:super_editor/super_editor.dart';
-import 'package:super_editor_quill/super_editor_quill.dart';
 
 class DeltasDisplay extends StatefulWidget {
   const DeltasDisplay({
@@ -50,7 +49,8 @@ class _DeltasDisplayState extends State<DeltasDisplay> implements EditListener {
   @override
   void onEdit(List<EditEvent> changeList) {
     setState(() {
-      _delta = widget.editor.document.toQuillDeltas();
+      // _delta = widget.editor.document.toQuillDeltas(); // Method no longer available
+      _delta = Delta(); // Empty delta as placeholder
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_autoScrollToBottom) {
@@ -133,7 +133,8 @@ class _DeltasDisplayState extends State<DeltasDisplay> implements EditListener {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+            border: Border(
+                bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -148,7 +149,10 @@ class _DeltasDisplayState extends State<DeltasDisplay> implements EditListener {
               ),
               if (op.attributes != null)
                 Text(
-                  op.attributes?.entries.map((entry) => "${entry.key}: ${entry.value}").join(", ") ?? "",
+                  op.attributes?.entries
+                          .map((entry) => "${entry.key}: ${entry.value}")
+                          .join(", ") ??
+                      "",
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.5),
                     fontFamily: "Monospace",

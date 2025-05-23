@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
 import 'package:super_editor/super_editor.dart';
-import 'package:super_editor_quill/super_editor_quill.dart';
 
 /// The background color of the window panes, such as the background of the
 /// app header/ribbon.
@@ -86,17 +85,17 @@ final featherStylesheet = defaultStylesheet.copyWith(
     inlineTextStyler: (Set<Attribution> attributions, TextStyle existingStyle) {
       var newStyle = defaultInlineTextStyler(attributions, existingStyle);
 
-      if (attributions.contains(const NamedFontSizeAttribution("Huge"))) {
+      if (attributions.contains(const NamedAttribution("Huge"))) {
         newStyle = newStyle.copyWith(
           fontSize: 32,
         );
       }
-      if (attributions.contains(const NamedFontSizeAttribution("Large"))) {
+      if (attributions.contains(const NamedAttribution("Large"))) {
         newStyle = newStyle.copyWith(
           fontSize: 19,
         );
       }
-      if (attributions.contains(const NamedFontSizeAttribution("Small"))) {
+      if (attributions.contains(const NamedAttribution("Small"))) {
         newStyle = newStyle.copyWith(
           fontSize: 10,
         );
@@ -213,7 +212,8 @@ final featherStyles = [
   ),
 ];
 
-FollowerAlignment popoverAligner(Rect globalLeaderRect, Size followerSize, Size screenSize, GlobalKey? boundaryKey) {
+FollowerAlignment popoverAligner(Rect globalLeaderRect, Size followerSize,
+    Size screenSize, GlobalKey? boundaryKey) {
   return const FollowerAlignment(
     leaderAnchor: Alignment.bottomLeft,
     followerAnchor: Alignment.topLeft,

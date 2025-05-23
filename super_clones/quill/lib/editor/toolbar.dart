@@ -10,7 +10,6 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:overlord/overlord.dart';
 import 'package:super_editor/super_editor.dart';
-import 'package:super_editor_quill/super_editor_quill.dart';
 
 class FormattingToolbar extends StatefulWidget {
   const FormattingToolbar({
@@ -158,9 +157,11 @@ class _FormattingToolbarState extends State<FormattingToolbar> {
     final extentOffset = (selection.extent.nodePosition as TextPosition).offset;
     final selectionStart = min(baseOffset, extentOffset);
     final selectionEnd = max(baseOffset, extentOffset);
-    final selectionRange = TextRange(start: selectionStart, end: selectionEnd - 1);
+    final selectionRange =
+        TextRange(start: selectionStart, end: selectionEnd - 1);
 
-    final textNode = widget.editor.document.getNodeById(selection.extent.nodeId) as TextNode;
+    final textNode =
+        widget.editor.document.getNodeById(selection.extent.nodeId) as TextNode;
     final text = textNode.text;
 
     final trimmedRange = _trimTextRangeWhitespace(text, selectionRange);
@@ -185,7 +186,8 @@ class _FormattingToolbarState extends State<FormattingToolbar> {
 
     // Clear the field and hide the URL bar
     _urlController!.clearTextAndSelection();
-    _urlFocusNode.unfocus(disposition: UnfocusDisposition.previouslyFocusedChild);
+    _urlFocusNode.unfocus(
+        disposition: UnfocusDisposition.previouslyFocusedChild);
     _linkPopoverController.close();
     setState(() {});
   }
@@ -220,7 +222,8 @@ class _FormattingToolbarState extends State<FormattingToolbar> {
 
     // Clear the field and hide the URL bar
     _imageController!.clearTextAndSelection();
-    _imageFocusNode.unfocus(disposition: UnfocusDisposition.previouslyFocusedChild);
+    _imageFocusNode.unfocus(
+        disposition: UnfocusDisposition.previouslyFocusedChild);
     _imagePopoverController.close();
     setState(() {});
   }
@@ -303,8 +306,9 @@ class _FormattingToolbarState extends State<FormattingToolbar> {
     if (selection != null) {
       extentNode = _document.getNodeById(selection.extent.nodeId);
       if (extentNode is TextNode) {
-        selectedBlockFormat =
-            selection.base.nodeId == selection.extent.nodeId ? FeatherTextBlock.fromNode(extentNode) : null;
+        selectedBlockFormat = selection.base.nodeId == selection.extent.nodeId
+            ? FeatherTextBlock.fromNode(extentNode)
+            : null;
       }
     }
 
@@ -462,7 +466,8 @@ class _FormattingToolbarState extends State<FormattingToolbar> {
           ),
           _buildSpacer(),
           IconButton(
-            icon: Icon(widget.isShowingDeltas ? Symbols.close : Symbols.menu_open),
+            icon: Icon(
+                widget.isShowingDeltas ? Symbols.close : Symbols.menu_open),
             onPressed: () {
               widget.onShowDeltasChange(!widget.isShowingDeltas);
             },
@@ -702,7 +707,8 @@ class _NamedTextSizeSelectorState extends State<_NamedTextSizeSelector> {
       return;
     }
 
-    final selectedNode = widget.editor.document.getNodeById(selection.extent.nodeId);
+    final selectedNode =
+        widget.editor.document.getNodeById(selection.extent.nodeId);
     if (selectedNode is! TextNode) {
       return;
     }
@@ -711,7 +717,7 @@ class _NamedTextSizeSelectorState extends State<_NamedTextSizeSelector> {
       AddTextAttributionsRequest(
         documentRange: selection,
         attributions: {
-          NamedFontSizeAttribution(newSizeName),
+          NamedAttribution(newSizeName),
         },
       ),
     ]);
@@ -722,12 +728,14 @@ class _NamedTextSizeSelectorState extends State<_NamedTextSizeSelector> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedFontSizeName = _getAllAttributions(widget.editor.document, widget.editor.composer)
-            .whereType<NamedFontSizeAttribution>()
-            .firstOrNull
-            ?.fontSizeName ??
-        _defaultSizeName;
-    final textItem = TextItem(id: selectedFontSizeName, label: selectedFontSizeName);
+    final selectedFontSizeName =
+        _getAllAttributions(widget.editor.document, widget.editor.composer)
+                .whereType<NamedAttribution>()
+                .firstOrNull
+                ?.name ??
+            _defaultSizeName;
+    final textItem =
+        TextItem(id: selectedFontSizeName, label: selectedFontSizeName);
 
     return TextItemSelector(
       parentFocusNode: widget.editorFocusNode,
@@ -743,7 +751,9 @@ class _NamedTextSizeSelectorState extends State<_NamedTextSizeSelector> {
       itemBuilder: (context, item, isActive, onTap) {
         return DecoratedBox(
           decoration: BoxDecoration(
-            color: isActive ? Colors.grey.withValues(alpha: 0.2) : Colors.transparent,
+            color: isActive
+                ? Colors.grey.withValues(alpha: 0.2)
+                : Colors.transparent,
           ),
           child: InkWell(
             onTap: onTap,
@@ -834,7 +844,8 @@ class _HeaderSelectorState extends State<_HeaderSelector> {
       return;
     }
 
-    final selectedNode = widget.editor.document.getNodeById(selection.extent.nodeId);
+    final selectedNode =
+        widget.editor.document.getNodeById(selection.extent.nodeId);
     if (selectedNode is! TextNode) {
       return;
     }
@@ -853,18 +864,24 @@ class _HeaderSelectorState extends State<_HeaderSelector> {
     final selection = composer.selection;
     var selectedHeaderLevel = "Normal";
     if (selection != null && selection.base.nodeId == selection.extent.nodeId) {
-      final selectedNode = widget.editor.document.getNodeById(selection.extent.nodeId);
+      final selectedNode =
+          widget.editor.document.getNodeById(selection.extent.nodeId);
       if (selectedNode is ParagraphNode) {
-        selectedHeaderLevel = _headerLevelNames[selectedNode.getMetadataValue("blockType")] ?? "Normal";
+        selectedHeaderLevel =
+            _headerLevelNames[selectedNode.getMetadataValue("blockType")] ??
+                "Normal";
       }
     }
-    final textItem = TextItem(id: selectedHeaderLevel, label: selectedHeaderLevel);
+    final textItem =
+        TextItem(id: selectedHeaderLevel, label: selectedHeaderLevel);
 
     return TextItemSelector(
       parentFocusNode: widget.editorFocusNode,
       // tapRegionGroupId: _tapRegionGroupId,
       selectedText: textItem,
-      items: _headingLevelNames.map((headingName) => TextItem(id: headingName, label: headingName)).toList(),
+      items: _headingLevelNames
+          .map((headingName) => TextItem(id: headingName, label: headingName))
+          .toList(),
       onSelected: (value) => _onChangeHeadingLevelRequested(value?.id),
       buttonSize: const Size(97, 30),
       popoverGeometry: const PopoverGeometry(
@@ -873,7 +890,9 @@ class _HeaderSelectorState extends State<_HeaderSelector> {
       ),
       itemBuilder: (context, item, isActive, onTap) => DecoratedBox(
         decoration: BoxDecoration(
-          color: isActive ? Colors.grey.withValues(alpha: 0.2) : Colors.transparent,
+          color: isActive
+              ? Colors.grey.withValues(alpha: 0.2)
+              : Colors.transparent,
         ),
         child: InkWell(
           onTap: onTap,
@@ -931,11 +950,13 @@ class _TextColorButtonState extends State<_TextColorButton> {
       return;
     }
 
-    final colorAttributions = widget.editor.document.getAttributionsByType<ColorAttribution>(selection);
+    final colorAttributions = widget.editor.document
+        .getAttributionsByType<ColorAttribution>(selection);
 
     widget.editor.execute([
       for (final existingAttribution in colorAttributions) //
-        RemoveTextAttributionsRequest(documentRange: selection, attributions: {existingAttribution}),
+        RemoveTextAttributionsRequest(
+            documentRange: selection, attributions: {existingAttribution}),
       if (newColor != null) //
         AddTextAttributionsRequest(
           documentRange: selection,
@@ -996,11 +1017,13 @@ class _HighlightColorButtonState extends State<_HighlightColorButton> {
       return;
     }
 
-    final colorAttributions = widget.editor.document.getAttributionsByType<BackgroundColorAttribution>(selection);
+    final colorAttributions = widget.editor.document
+        .getAttributionsByType<BackgroundColorAttribution>(selection);
 
     widget.editor.execute([
       for (final existingAttribution in colorAttributions) //
-        RemoveTextAttributionsRequest(documentRange: selection, attributions: {existingAttribution}),
+        RemoveTextAttributionsRequest(
+            documentRange: selection, attributions: {existingAttribution}),
       if (newColor != null) //
         AddTextAttributionsRequest(
           documentRange: selection,
@@ -1062,11 +1085,13 @@ class _FontFamilySelectorState extends State<_FontFamilySelector> {
       return;
     }
 
-    final fontFamilyAttributions = widget.editor.document.getAttributionsByType<FontFamilyAttribution>(selection);
+    final fontFamilyAttributions = widget.editor.document
+        .getAttributionsByType<FontFamilyAttribution>(selection);
 
     widget.editor.execute([
       for (final existingAttribution in fontFamilyAttributions) //
-        RemoveTextAttributionsRequest(documentRange: selection, attributions: {existingAttribution}),
+        RemoveTextAttributionsRequest(
+            documentRange: selection, attributions: {existingAttribution}),
       if (newFontFamily != null) //
         AddTextAttributionsRequest(
           documentRange: selection,
@@ -1082,17 +1107,20 @@ class _FontFamilySelectorState extends State<_FontFamilySelector> {
   Widget build(BuildContext context) {
     const defaultFont = 'Sans Serif';
 
-    final selectedFont = _getAllAttributions(widget.editor.document, widget.editor.composer)
-            .whereType<FontFamilyAttribution>()
-            .firstOrNull
-            ?.fontFamily ??
-        defaultFont;
+    final selectedFont =
+        _getAllAttributions(widget.editor.document, widget.editor.composer)
+                .whereType<FontFamilyAttribution>()
+                .firstOrNull
+                ?.fontFamily ??
+            defaultFont;
     final textItem = TextItem(id: selectedFont, label: selectedFont);
 
     return TextItemSelector(
       parentFocusNode: widget.editorFocusNode,
       selectedText: textItem,
-      items: _availableFonts.map((fontFamily) => TextItem(id: fontFamily, label: fontFamily)).toList(),
+      items: _availableFonts
+          .map((fontFamily) => TextItem(id: fontFamily, label: fontFamily))
+          .toList(),
       onSelected: (value) => _onChangeFontFamilyRequested(value?.id),
       buttonSize: const Size(97, 30),
       popoverGeometry: const PopoverGeometry(
@@ -1101,7 +1129,9 @@ class _FontFamilySelectorState extends State<_FontFamilySelector> {
       ),
       itemBuilder: (context, item, isActive, onTap) => DecoratedBox(
         decoration: BoxDecoration(
-          color: isActive ? Colors.grey.withValues(alpha: 0.2) : Colors.transparent,
+          color: isActive
+              ? Colors.grey.withValues(alpha: 0.2)
+              : Colors.transparent,
         ),
         child: InkWell(
           onTap: onTap,
@@ -1163,7 +1193,12 @@ class _AlignmentButtonState extends State<_AlignmentButton> {
         id: alignment.name,
         icon: _getTextAlignIcon(alignment),
       ),
-      icons: const [TextAlign.left, TextAlign.center, TextAlign.right, TextAlign.justify]
+      icons: const [
+        TextAlign.left,
+        TextAlign.center,
+        TextAlign.right,
+        TextAlign.justify
+      ]
           .map(
             (alignment) => IconItem(
               icon: _getTextAlignIcon(alignment),
@@ -1175,7 +1210,8 @@ class _AlignmentButtonState extends State<_AlignmentButton> {
         if (selectedItem == null) {
           return;
         }
-        final newAlignment = TextAlign.values.firstWhere((e) => e.name == selectedItem.id);
+        final newAlignment =
+            TextAlign.values.firstWhere((e) => e.name == selectedItem.id);
 
         final composer = widget.editor.composer;
         final selection = composer.selection;
@@ -1244,7 +1280,8 @@ class _AlignmentButtonState extends State<_AlignmentButton> {
 
 /// Returns all attributions of the currently selected range, if the selection is expanded,
 /// or the current composer attributes, if the selection is collapsed.
-Set<Attribution> _getAllAttributions(Document document, DocumentComposer composer) {
+Set<Attribution> _getAllAttributions(
+    Document document, DocumentComposer composer) {
   final selection = composer.selection;
   if (selection == null) {
     return <Attribution>{};

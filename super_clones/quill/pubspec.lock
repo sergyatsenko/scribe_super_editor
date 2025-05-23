@@ -522,13 +522,6 @@ packages:
       relative: true
     source: path
     version: "0.1.7"
-  super_editor_quill:
-    dependency: "direct main"
-    description:
-      path: "../../super_editor_quill"
-      relative: true
-    source: path
-    version: "0.1.0-dev.10"
   super_keyboard:
     dependency: transitive
     description:
@@ -576,14 +569,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.8"
-  text_table:
-    dependency: transitive
-    description:
-      name: text_table
-      sha256: a42b35675be614274b884ee482d4bdf4bdf707bc65de18cb8f1ad288c1beb1f4
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.0.3"
   typed_data:
     dependency: transitive
     description:
