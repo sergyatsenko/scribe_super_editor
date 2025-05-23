@@ -66,8 +66,6 @@ dev_dependencies:
   meta: ^1.8.0
   args: ^2.3.1
   path: ^1.8.3
-  golden_runner:
-    path: ../golden_runner
   flutter_test_runners: ^0.0.4
   golden_bricks: ^1.0.0
 # flutter:
