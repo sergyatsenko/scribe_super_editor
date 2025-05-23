@@ -160,6 +160,11 @@ class _ToolbarContentState extends State<ToolbarContent> {
   late FocusNode _urlFocusNode;
   ImeAttributedTextEditingController? _urlController;
 
+  // Scroll tracking for full-width toolbar
+  late ScrollController _toolbarScrollController;
+  bool _canScrollLeft = false;
+  bool _canScrollRight = false;
+
   @override
   void initState() {
     super.initState();
@@ -168,13 +173,37 @@ class _ToolbarContentState extends State<ToolbarContent> {
         controller: SingleLineAttributedTextEditingController(_applyLink))
       ..onPerformActionPressed = _onPerformAction
       ..text = AttributedText("https://");
+
+    _toolbarScrollController = ScrollController();
+    _toolbarScrollController.addListener(_updateScrollIndicators);
   }
 
   @override
   void dispose() {
     _urlFocusNode.dispose();
     _urlController!.dispose();
+    _toolbarScrollController.removeListener(_updateScrollIndicators);
+    _toolbarScrollController.dispose();
     super.dispose();
+  }
+
+  void _updateScrollIndicators() {
+    if (!mounted) return;
+
+    final position = _toolbarScrollController.position;
+    setState(() {
+      _canScrollLeft = position.pixels > 0;
+      _canScrollRight = position.pixels < position.maxScrollExtent;
+    });
+  }
+
+  // Call this after the widget builds to check initial scroll state
+  void _checkInitialScrollState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _toolbarScrollController.hasClients) {
+        _updateScrollIndicators();
+      }
+    });
   }
 
   bool _isConvertibleNode() {
@@ -565,6 +594,7 @@ class _ToolbarContentState extends State<ToolbarContent> {
       blendMode: BlendMode.dstIn,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
+        controller: _toolbarScrollController,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -575,65 +605,79 @@ class _ToolbarContentState extends State<ToolbarContent> {
   }
 
   Widget _buildFullWidthScrollableToolbar() {
-    // Full-width mobile styling with prominent scroll indicators
+    // Check initial scroll state after build
+    _checkInitialScrollState();
+
+    // Full-width mobile styling with dynamic scroll indicators
     return Stack(
       children: [
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
+          controller: _toolbarScrollController,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: _buildToolbarButtons(),
           ),
         ),
-        // Left arrow indicator
-        Positioned(
-          left: 0,
-          top: 0,
-          bottom: 0,
-          child: Container(
-            width: 20,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [
-                  Theme.of(context).colorScheme.surface,
-                  Theme.of(context).colorScheme.surface.withOpacity(0.0),
-                ],
+        // Left arrow indicator - only show when can scroll left
+        if (_canScrollLeft)
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              width: 30,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Theme.of(context).colorScheme.surface,
+                    Theme.of(context).colorScheme.surface.withOpacity(0.0),
+                  ],
+                ),
+              ),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.chevron_left,
+                  size: 20,
+                  color: Colors.black54,
+                ),
+                onPressed: _scrollLeft,
+                splashRadius: 15,
               ),
             ),
-            child: const Icon(
-              Icons.chevron_left,
-              size: 16,
-              color: Colors.grey,
-            ),
           ),
-        ),
-        // Right arrow indicator
-        Positioned(
-          right: 0,
-          top: 0,
-          bottom: 0,
-          child: Container(
-            width: 20,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.centerRight,
-                end: Alignment.centerLeft,
-                colors: [
-                  Theme.of(context).colorScheme.surface,
-                  Theme.of(context).colorScheme.surface.withOpacity(0.0),
-                ],
+        // Right arrow indicator - only show when can scroll right
+        if (_canScrollRight)
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              width: 30,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerRight,
+                  end: Alignment.centerLeft,
+                  colors: [
+                    Theme.of(context).colorScheme.surface,
+                    Theme.of(context).colorScheme.surface.withOpacity(0.0),
+                  ],
+                ),
+              ),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: Colors.black54,
+                ),
+                onPressed: _scrollRight,
+                splashRadius: 15,
               ),
             ),
-            child: const Icon(
-              Icons.chevron_right,
-              size: 16,
-              color: Colors.grey,
-            ),
           ),
-        ),
       ],
     );
   }
@@ -795,6 +839,28 @@ class _ToolbarContentState extends State<ToolbarContent> {
         return Icons.format_align_right;
       case TextAlign.justify:
         return Icons.format_align_justify;
+    }
+  }
+
+  void _scrollLeft() {
+    if (_toolbarScrollController.hasClients) {
+      _toolbarScrollController.animateTo(
+        (_toolbarScrollController.offset - 100)
+            .clamp(0.0, _toolbarScrollController.position.maxScrollExtent),
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _scrollRight() {
+    if (_toolbarScrollController.hasClients) {
+      _toolbarScrollController.animateTo(
+        (_toolbarScrollController.offset + 100)
+            .clamp(0.0, _toolbarScrollController.position.maxScrollExtent),
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
