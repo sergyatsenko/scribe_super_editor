@@ -32,9 +32,6 @@ class _EditorScreenState extends State<EditorScreen> {
   final GlobalKey _editorKey = GlobalKey();
   final GlobalKey _viewportKey = GlobalKey();
 
-  // Add a counter to force rebuilds
-  int _editorRebuildCount = 0;
-
   // Selection layer links for the floating toolbar
   late final SelectionLayerLinks _selectionLayerLinks;
 
@@ -62,13 +59,11 @@ class _EditorScreenState extends State<EditorScreen> {
       onPasteComplete: () {
         print(
             '[_EditorScreenState] Context menu paste complete callback received');
-        // Force an immediate UI rebuild after paste by incrementing the rebuild count
+        // Force an immediate UI rebuild after paste
         if (mounted) {
           setState(() {
-            // Increment the rebuild counter to force a complete widget rebuild
-            _editorRebuildCount++;
             print(
-                '[_EditorScreenState] Forced rebuild after context menu paste. New count: $_editorRebuildCount');
+                '[_EditorScreenState] Forced rebuild after context menu paste');
           });
         }
       },
@@ -141,12 +136,14 @@ class _EditorScreenState extends State<EditorScreen> {
   bool get _isIOS => defaultTargetPlatform == TargetPlatform.iOS;
 
   void _hideOrShowToolbar() {
-    if (_gestureMode != DocumentGestureMode.mouse) {
-      // We only add our own toolbar when using mouse. On mobile, a bar
-      // is rendered for us.
-      return;
+    if (_gestureMode == DocumentGestureMode.mouse || _isIOS) {
+      // Desktop and iOS - use our custom floating toolbar
+      _hideOrShowDesktopToolbar();
     }
+    // Android and other mobile platforms can use default behavior
+  }
 
+  void _hideOrShowDesktopToolbar() {
     final selection = _editorController.composer?.selection;
     if (selection == null) {
       // Nothing is selected. We don't want to show a toolbar
@@ -197,7 +194,12 @@ class _EditorScreenState extends State<EditorScreen> {
   }
 
   void _showEditorToolbar() {
-    _textFormatBarOverlayController.show();
+    // Schedule the show() call to avoid calling it during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _textFormatBarOverlayController.show();
+      }
+    });
 
     // Schedule a callback after this frame to locate the selection
     // bounds on the screen and display the toolbar near the selected
@@ -224,7 +226,12 @@ class _EditorScreenState extends State<EditorScreen> {
     // the bar doesn't momentarily "flash" at its old anchor position.
     _textSelectionAnchor.value = null;
 
-    _textFormatBarOverlayController.hide();
+    // Schedule the hide() call to avoid calling it during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _textFormatBarOverlayController.hide();
+      }
+    });
 
     // Ensure that focus returns to the editor.
     if (FocusManager.instance.primaryFocus != FocusManager.instance.rootScope) {
@@ -233,6 +240,13 @@ class _EditorScreenState extends State<EditorScreen> {
   }
 
   void _showImageToolbar() {
+    // Schedule the show() call to avoid calling it during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _imageFormatBarOverlayController.show();
+      }
+    });
+
     // Schedule a callback after this frame to locate the selection
     // bounds on the screen and display the toolbar near the selected
     // text.
@@ -254,8 +268,6 @@ class _EditorScreenState extends State<EditorScreen> {
         }
       }
     });
-
-    _imageFormatBarOverlayController.show();
   }
 
   void _hideImageToolbar() {
@@ -263,7 +275,12 @@ class _EditorScreenState extends State<EditorScreen> {
     // it doesn't momentarily "flash" at its old anchor position.
     _imageSelectionAnchor.value = null;
 
-    _imageFormatBarOverlayController.hide();
+    // Schedule the hide() call to avoid calling it during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _imageFormatBarOverlayController.hide();
+      }
+    });
 
     // Ensure that focus returns to the editor.
     if (FocusManager.instance.primaryFocus != FocusManager.instance.rootScope) {
@@ -299,22 +316,12 @@ class _EditorScreenState extends State<EditorScreen> {
 
   Widget _buildLayout() {
     if (_isIOS && !_editorController.isDistractionFree) {
-      // On iOS, use overlay approach like SuperEditor's mobile toolbar
-      return Stack(
+      // On iOS, use only the floating toolbar from iOS controls scope
+      // Don't show the bottom toolbar as it conflicts with the floating one
+      return Column(
         children: [
-          Column(
-            children: [
-              _buildAppBar(),
-              Expanded(child: _buildEditor()),
-            ],
-          ),
-          // Position toolbar at bottom using the same approach as SuperEditor
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _buildKeyboardAwareToolbar(),
-          ),
+          _buildAppBar(),
+          Expanded(child: _buildEditor()),
         ],
       );
     } else {
@@ -373,8 +380,7 @@ class _EditorScreenState extends State<EditorScreen> {
   }
 
   Widget _buildEditor() {
-    print(
-        '[_EditorScreenState] _buildEditor() called. Rebuild count: $_editorRebuildCount');
+    print('[_EditorScreenState] _buildEditor() called');
     final editor = _editorController.editor;
     final document = _editorController.document;
     final composer = _editorController.composer;
@@ -386,43 +392,42 @@ class _EditorScreenState extends State<EditorScreen> {
 
     print('[_EditorScreenState] ✅ Creating SuperEditor with CustomPastePlugin');
 
+    Widget superEditor = SuperEditor(
+      key: _editorKey,
+      editor: editor,
+      focusNode: _editorFocusNode,
+      scrollController: _scrollController,
+      documentLayoutKey: _docLayoutKey,
+      selectionLayerLinks: _selectionLayerLinks,
+      // Use default component builders - the style for code blocks will be defined in the stylesheet
+      componentBuilders: defaultComponentBuilders,
+      gestureMode: _gestureMode,
+      plugins: {
+        // Create a custom paste plugin with a listener to force refresh after paste
+        CustomPastePlugin(
+          clipboardService: _clipboardService,
+          onPasteComplete: () {
+            print('[_EditorScreenState] Paste complete callback received');
+            // Force an immediate UI rebuild after paste
+            if (mounted) {
+              setState(() {
+                print('[_EditorScreenState] Forced rebuild after paste');
+              });
+            }
+          },
+        ),
+      },
+      stylesheet: _buildStylesheet(),
+    );
+
+    // Don't wrap with iOS controls scope - use our own floating toolbar instead
     return KeyedSubtree(
       key: _viewportKey,
       child: Container(
         color: _editorController.isDistractionFree
             ? Theme.of(context).colorScheme.surface
             : null,
-        child: SuperEditor(
-          // Use a combined key of the GlobalKey and rebuild count to force complete rebuilds
-          key: ValueKey('$_editorKey-$_editorRebuildCount'),
-          editor: editor,
-          focusNode: _editorFocusNode,
-          scrollController: _scrollController,
-          documentLayoutKey: _docLayoutKey,
-          selectionLayerLinks: _selectionLayerLinks,
-          // Use default component builders - the style for code blocks will be defined in the stylesheet
-          componentBuilders: defaultComponentBuilders,
-          gestureMode: _gestureMode,
-          plugins: {
-            // Create a custom paste plugin with a listener to force refresh after paste
-            CustomPastePlugin(
-              clipboardService: _clipboardService,
-              onPasteComplete: () {
-                print('[_EditorScreenState] Paste complete callback received');
-                // Force an immediate UI rebuild after paste by incrementing the rebuild count
-                if (mounted) {
-                  setState(() {
-                    // Increment the rebuild counter to force a complete widget rebuild
-                    _editorRebuildCount++;
-                    print(
-                        '[_EditorScreenState] Forced rebuild. New count: $_editorRebuildCount');
-                  });
-                }
-              },
-            ),
-          },
-          stylesheet: _buildStylesheet(),
-        ),
+        child: superEditor,
       ),
     );
   }
