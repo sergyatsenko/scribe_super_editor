@@ -25,8 +25,8 @@ class CustomPastePlugin extends SuperEditorPlugin {
 
   @override
   List<DocumentKeyboardAction> get keyboardActions => [
-    _handlePasteKeyboardAction, // Assign the function directly
-  ];
+        _handlePasteKeyboardAction, // Assign the function directly
+      ];
 
   // This function now matches the DocumentKeyboardAction typedef.
   // It's a method of the class, so it has access to 'this' (e.g., _handlePaste).
@@ -34,24 +34,31 @@ class CustomPastePlugin extends SuperEditorPlugin {
     required SuperEditorContext editContext,
     required KeyEvent keyEvent,
   }) {
+    print('[CustomPastePlugin] Key event received: ${keyEvent.runtimeType}');
+
     if (keyEvent is! KeyDownEvent) {
       // Only interested in key down events for shortcuts
+      print('[CustomPastePlugin] Not a KeyDownEvent, continuing execution');
       return ExecutionInstruction.continueExecution;
     }
 
     // Standard paste shortcuts: Ctrl+V (Windows/Linux), Cmd+V (macOS)
-    final isPasteShortcut =
-        (HardwareKeyboard.instance.isControlPressed &&
+    final isPasteShortcut = (HardwareKeyboard.instance.isControlPressed &&
             keyEvent.logicalKey == LogicalKeyboardKey.keyV) ||
         (HardwareKeyboard.instance.isMetaPressed &&
             keyEvent.logicalKey == LogicalKeyboardKey.keyV);
 
+    print(
+        '[CustomPastePlugin] Key: ${keyEvent.logicalKey}, Ctrl: ${HardwareKeyboard.instance.isControlPressed}, Meta: ${HardwareKeyboard.instance.isMetaPressed}, isPasteShortcut: $isPasteShortcut');
+
     if (isPasteShortcut) {
+      print('[CustomPastePlugin] ✅ PASTE SHORTCUT DETECTED! Handling paste...');
       _handlePaste(editContext); // 'this' is implicitly available
       return ExecutionInstruction
           .haltExecution; // Indicate that the event was handled
     }
 
+    print('[CustomPastePlugin] Not a paste shortcut, continuing execution');
     return ExecutionInstruction
         .continueExecution; // Event not handled by this action
   }
@@ -59,16 +66,25 @@ class CustomPastePlugin extends SuperEditorPlugin {
   /// Handles the paste operation by getting data from the clipboard
   /// and inserting it into the document.
   Future<void> _handlePaste(SuperEditorContext editContext) async {
+    print('[CustomPastePlugin] 🚀 _handlePaste() started');
+
     if (clipboardService == null) {
+      print('[CustomPastePlugin] ❌ clipboardService is null!');
       return;
     }
+
+    print('[CustomPastePlugin] ✅ clipboardService is available');
 
     final document = editContext.document;
     final composer = editContext.composer;
 
     if (document is! MutableDocument || composer is! MutableDocumentComposer) {
+      print('[CustomPastePlugin] ❌ Document or composer type mismatch');
       return;
     }
+
+    print(
+        '[CustomPastePlugin] ✅ Document and composer are valid, calling _processClipboardContent');
 
     // We need the original selection for _processClipboardContent
     // DO NOT clear selection yet - the paste handler needs it
@@ -239,8 +255,7 @@ class CustomPastePlugin extends SuperEditorPlugin {
         ClipboardPasteData(
           type: ClipboardDataType.html,
           content: cleanedHtml,
-          plainText:
-              plainTextContent ??
+          plainText: plainTextContent ??
               '', // Provide original plain text as fallback reference
         ),
       );
@@ -255,19 +270,21 @@ class CustomPastePlugin extends SuperEditorPlugin {
       try {
         // Check if the content looks like markdown (has # headers, *, etc.)
         final bool looksLikeMarkdown = _looksLikeMarkdown(plainTextContent);
-        
+
         // Special handling for code fences - more robust check for code blocks
-        final bool containsCodeFences = RegExp(r'```[\w]*\n[\s\S]*?```').hasMatch(plainTextContent);
+        final bool containsCodeFences =
+            RegExp(r'```[\w]*\n[\s\S]*?```').hasMatch(plainTextContent);
 
         if (looksLikeMarkdown || containsCodeFences) {
           // Use the super_editor_markdown package to parse the markdown string
           try {
             // Convert the markdown text to a SuperEditor Document
-            final Document markdownDocument = deserializeMarkdownToDocument(plainTextContent);
-            
+            final Document markdownDocument =
+                deserializeMarkdownToDocument(plainTextContent);
+
             // Now extract all nodes from the document
             List<DocumentNode> markdownNodes = [];
-            
+
             // Special handling for code blocks if the standard markdown parsing doesn't work
             if (containsCodeFences && markdownDocument.nodeCount == 0) {
               markdownNodes = _extractCodeBlocksManually(plainTextContent);
@@ -277,23 +294,26 @@ class CustomPastePlugin extends SuperEditorPlugin {
                 final node = markdownDocument.getNodeAt(i);
                 // Only process non-null nodes
                 if (node != null) {
-                  print('[CustomPastePlugin] Node type: ${node.runtimeType}, metadata: ${node.metadata}');
+                  print(
+                      '[CustomPastePlugin] Node type: ${node.runtimeType}, metadata: ${node.metadata}');
                   final nodeCopy = _createNodeWithNewId(node);
                   markdownNodes.add(nodeCopy);
                 }
               }
             }
-            
+
             if (markdownNodes.isNotEmpty) {
               nodesToInsert = markdownNodes;
-              print('[CustomPastePlugin] Successfully parsed Markdown content.');
+              print(
+                  '[CustomPastePlugin] Successfully parsed Markdown content.');
             } else {
               print(
                 '[CustomPastePlugin] Markdown parsing resulted in empty document. Falling back to plain text processing.',
               );
             }
           } catch (e) {
-            print('[CustomPastePlugin] Error processing markdown with super_editor_markdown: $e');
+            print(
+                '[CustomPastePlugin] Error processing markdown with super_editor_markdown: $e');
           }
         } else {
           // Not markdown - will fall through to plain text processing
@@ -414,7 +434,7 @@ class CustomPastePlugin extends SuperEditorPlugin {
         text: node.text,
         metadata: Map<String, dynamic>.from(node.metadata),
       );
-    } 
+    }
     // Handle horizontal rule nodes
     else if (node is HorizontalRuleNode) {
       return HorizontalRuleNode(
@@ -441,7 +461,8 @@ class CustomPastePlugin extends SuperEditorPlugin {
       );
     }
     // Handle task nodes
-    else if (node.getMetadataValue('blockType') == const NamedAttribution('task')) {
+    else if (node.getMetadataValue('blockType') ==
+        const NamedAttribution('task')) {
       // Create a task node (checkbox item)
       if (node is ParagraphNode) {
         return ParagraphNode(
@@ -449,14 +470,16 @@ class CustomPastePlugin extends SuperEditorPlugin {
           text: node.text,
           metadata: {
             'blockType': const NamedAttribution('task'),
-            if (node.metadata.containsKey('checked')) 'checked': node.metadata['checked'],
+            if (node.metadata.containsKey('checked'))
+              'checked': node.metadata['checked'],
           },
         );
       }
     }
     // Handle code blocks - improved handling with better attribution
-    else if (node.getMetadataValue('blockType') == const NamedAttribution('code') || 
-             node.getMetadataValue('blockType')?.id == 'code') {
+    else if (node.getMetadataValue('blockType') ==
+            const NamedAttribution('code') ||
+        node.getMetadataValue('blockType')?.id == 'code') {
       if (node is ParagraphNode) {
         // For code blocks, ensure we properly format them and preserve language information
         String? language;
@@ -465,13 +488,14 @@ class CustomPastePlugin extends SuperEditorPlugin {
           // Cast to String if not null
           language = langValue != null ? langValue.toString() : null;
         }
-        
+
         // Print more detailed debugging information about the code block
-        print('[CustomPastePlugin] Processing code block with content: "${node.text.text.substring(0, math.min(20, node.text.text.length))}..."');
+        print(
+            '[CustomPastePlugin] Processing code block with content: "${node.text.text.substring(0, math.min(20, node.text.text.length))}..."');
         if (language != null) {
           print('[CustomPastePlugin] Code language: $language');
         }
-        
+
         // Create a new node with proper formatting for code blocks
         return ParagraphNode(
           id: Editor.createNodeId(),
@@ -492,7 +516,8 @@ class CustomPastePlugin extends SuperEditorPlugin {
 
     // For any other node type, create a generic paragraph with the node's string representation
     print('[CustomPastePlugin] Unhandled node type: ${node.runtimeType}');
-    return ParagraphNode(id: Editor.createNodeId(), text: AttributedText(node.toString()));
+    return ParagraphNode(
+        id: Editor.createNodeId(), text: AttributedText(node.toString()));
   }
 
   /// Manually extracts code blocks from markdown text
@@ -500,15 +525,16 @@ class CustomPastePlugin extends SuperEditorPlugin {
   List<DocumentNode> _extractCodeBlocksManually(String markdownText) {
     final List<DocumentNode> nodes = [];
     final lines = markdownText.split('\n');
-    
+
     // Debug output for the entire input text
-    print('[CustomPastePlugin] Manually extracting code blocks from markdown: ${markdownText.length} characters');
-    
+    print(
+        '[CustomPastePlugin] Manually extracting code blocks from markdown: ${markdownText.length} characters');
+
     // Process the lines to extract code blocks
     int i = 0;
     while (i < lines.length) {
       final line = lines[i].trim();
-      
+
       // Check for code fence start
       if (line.startsWith('```')) {
         // Extract language if specified (e.g., ```dart)
@@ -517,18 +543,20 @@ class CustomPastePlugin extends SuperEditorPlugin {
           language = line.substring(3).trim();
           if (language.isEmpty) language = null;
         }
-        
+
         if (language != null) {
-          print('[CustomPastePlugin] Found code block with language: $language');
+          print(
+              '[CustomPastePlugin] Found code block with language: $language');
         } else {
-          print('[CustomPastePlugin] Found code block without language specification');
+          print(
+              '[CustomPastePlugin] Found code block without language specification');
         }
-        
+
         // Collect all lines until the closing code fence
         final codeLines = <String>[];
         int j = i + 1;
         bool foundClosingFence = false;
-        
+
         while (j < lines.length) {
           if (lines[j].trim() == '```') {
             foundClosingFence = true;
@@ -537,12 +565,13 @@ class CustomPastePlugin extends SuperEditorPlugin {
           codeLines.add(lines[j]);
           j++;
         }
-        
+
         // Create a code block node - only if we have content
         if (codeLines.isNotEmpty) {
           final codeText = codeLines.join('\n');
-          print('[CustomPastePlugin] Code block content preview: "${codeText.substring(0, math.min(20, codeText.length))}..."');
-          
+          print(
+              '[CustomPastePlugin] Code block content preview: "${codeText.substring(0, math.min(20, codeText.length))}..."');
+
           // Create the code block with proper styling that matches our stylesheet
           final codeNode = ParagraphNode(
             id: Editor.createNodeId(),
@@ -557,7 +586,7 @@ class CustomPastePlugin extends SuperEditorPlugin {
           nodes.add(codeNode);
           print('[CustomPastePlugin] Added code block node to result');
         }
-        
+
         // Skip to after the closing fence or to the end if no closing fence
         i = foundClosingFence ? j + 1 : j;
       } else {
@@ -572,11 +601,12 @@ class CustomPastePlugin extends SuperEditorPlugin {
         i++;
       }
     }
-    
-    print('[CustomPastePlugin] Manual extraction complete. Generated ${nodes.length} nodes');
+
+    print(
+        '[CustomPastePlugin] Manual extraction complete. Generated ${nodes.length} nodes');
     return nodes;
   }
-  
+
   /// Checks if text content appears to be Markdown
   /// Returns true if the content contains common Markdown syntax
   bool _looksLikeMarkdown(String text) {

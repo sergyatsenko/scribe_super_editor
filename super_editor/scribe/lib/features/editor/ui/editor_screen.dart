@@ -126,8 +126,11 @@ class _EditorScreenState extends State<EditorScreen> {
     final composer = _editorController.composer;
 
     if (editor == null || document == null || composer == null) {
+      print('[_EditorScreenState] ❌ Editor components not ready yet');
       return const Center(child: CircularProgressIndicator());
     }
+
+    print('[_EditorScreenState] ✅ Creating SuperEditor with CustomPastePlugin');
 
     return Container(
       color: _editorController.isDistractionFree
