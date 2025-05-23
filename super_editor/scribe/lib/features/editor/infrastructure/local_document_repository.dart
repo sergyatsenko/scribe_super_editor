@@ -65,11 +65,7 @@ class LocalDocumentRepository implements DocumentRepository {
       nodes: [
         ParagraphNode(
           id: Editor.createNodeId(),
-          text: AttributedText('Welcome to Super Editor Scribe'),
-        ),
-        ParagraphNode(
-          id: Editor.createNodeId(),
-          text: AttributedText('Start typing to create your document...'),
+          text: AttributedText(''),
         ),
       ],
     );

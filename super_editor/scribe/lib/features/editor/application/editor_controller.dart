@@ -34,7 +34,7 @@ class EditorController extends ChangeNotifier {
           nodes: [
             ParagraphNode(
               id: Editor.createNodeId(),
-              text: AttributedText('Welcome to Super Editor Scribe'),
+              text: AttributedText(''),
             ),
           ],
         );
