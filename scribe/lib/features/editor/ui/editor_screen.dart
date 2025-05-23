@@ -360,19 +360,12 @@ class _EditorScreenState extends State<EditorScreen> {
     }
     return KeyboardHeightBuilder(
       builder: (context, keyboardHeight) {
-        // Use keyboardHeight from KeyboardHeightBuilder primarily for visibility detection
-        // and for content padding elsewhere.
-        final bool isToolbarActuallyVisible =
-            _editorFocusNode.hasFocus || keyboardHeight > 0;
-        if (!isToolbarActuallyVisible) {
-          return const SizedBox.shrink();
-        }
-
         // For positioning, MediaQuery.of(context).viewInsets.bottom is often more reliable
         // as it directly reflects the space taken by system UI like the keyboard.
         final double actualKeyboardOffset =
             MediaQuery.of(context).viewInsets.bottom;
 
+        // Always show the toolbar on iOS (per user request)
         return Positioned(
           left: 0,
           right: 0,
@@ -383,6 +376,7 @@ class _EditorScreenState extends State<EditorScreen> {
             editor: _editorController.editor!,
             document: _editorController.document!,
             composer: _editorController.composer!,
+            isFullWidth: true, // Enable full-width mobile styling
           ),
         );
       },

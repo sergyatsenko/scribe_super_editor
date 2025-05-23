@@ -140,6 +140,7 @@ class ToolbarContent extends StatefulWidget {
     required this.document,
     required this.composer,
     this.onLinkApplied, // Optional callback for when a link is applied
+    this.isFullWidth = false, // Whether to use full-width mobile styling
   }) : super(key: key);
 
   final GlobalKey editorViewportKey;
@@ -148,6 +149,7 @@ class ToolbarContent extends StatefulWidget {
   final Document document;
   final DocumentComposer composer;
   final VoidCallback? onLinkApplied;
+  final bool isFullWidth; // New parameter for mobile full-width styling
 
   @override
   State<ToolbarContent> createState() => _ToolbarContentState();
@@ -520,116 +522,184 @@ class _ToolbarContentState extends State<ToolbarContent> {
   }
 
   Widget _buildActualToolbar() {
-    // Wrap the toolbar content with a Material widget for consistent styling.
+    // Use different styling for full-width mobile vs floating desktop toolbar
     return Material(
-      shape: const StadiumBorder(),
+      shape: widget.isFullWidth
+          ? const RoundedRectangleBorder()
+          : const StadiumBorder(),
       elevation: 5,
       clipBehavior: Clip.hardEdge,
-      // Constrain the maximum width of the toolbar.
-      // This allows the SingleChildScrollView to know its bounds.
       child: ConstrainedBox(
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9),
+        constraints: BoxConstraints(
+          maxWidth: widget.isFullWidth
+              ? MediaQuery.of(context).size.width // Full width for mobile
+              : MediaQuery.of(context).size.width *
+                  0.9, // Constrained for desktop
+        ),
         child: SizedBox(
           height: 40,
-          // Enable horizontal scrolling for the toolbar items.
-          child: ShaderMask(
-            shaderCallback: (Rect bounds) {
-              return LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: <Color>[
-                  Colors.transparent,
-                  Colors.black,
-                  Colors.black,
-                  Colors.transparent
-                ],
-                stops: [0.0, 0.05, 0.95, 1.0],
-              ).createShader(bounds);
-            },
-            blendMode: BlendMode.dstIn,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              // Use a Row to layout the toolbar items horizontally.
-              // mainAxisSize.min ensures the Row takes up only necessary space if content is smaller than max width.
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (_isConvertibleNode()) ...[
-                    Tooltip(
-                        message:
-                            AppLocalizations.of(context)!.labelTextBlockType,
-                        child: _buildBlockTypeSelector()),
-                    _buildVerticalDivider(),
-                  ],
-                  Center(
-                      child: IconButton(
-                          onPressed: _toggleBold,
-                          icon: const Icon(Icons.format_bold),
-                          splashRadius: 16,
-                          tooltip: AppLocalizations.of(context)!.labelBold)),
-                  Center(
-                      child: IconButton(
-                          onPressed: _toggleItalics,
-                          icon: const Icon(Icons.format_italic),
-                          splashRadius: 16,
-                          tooltip: AppLocalizations.of(context)!.labelItalics)),
-                  Center(
-                      child: IconButton(
-                          onPressed: _toggleStrikethrough,
-                          icon: const Icon(Icons.strikethrough_s),
-                          splashRadius: 16,
-                          tooltip: AppLocalizations.of(context)!
-                              .labelStrikethrough)),
-                  Center(
-                      child: IconButton(
-                          onPressed: _toggleSuperscript,
-                          icon: const Icon(Icons.superscript),
-                          splashRadius: 16,
-                          tooltip:
-                              AppLocalizations.of(context)!.labelSuperscript)),
-                  Center(
-                      child: IconButton(
-                          onPressed: _toggleSubscript,
-                          icon: const Icon(Icons.subscript),
-                          splashRadius: 16,
-                          tooltip:
-                              AppLocalizations.of(context)!.labelSubscript)),
-                  Center(
-                      child: IconButton(
-                          onPressed: _areMultipleLinksSelected()
-                              ? null
-                              : _onLinkPressed,
-                          icon: const Icon(Icons.link),
-                          color: _isSingleLinkSelected()
-                              ? const Color(0xFF007AFF)
-                              : IconTheme.of(context).color,
-                          splashRadius: 16,
-                          tooltip: AppLocalizations.of(context)!.labelLink)),
-                  if (_isTextAlignable())
-                    Row(mainAxisSize: MainAxisSize.min, children: [
-                      _buildVerticalDivider(),
-                      Tooltip(
-                          message:
-                              AppLocalizations.of(context)!.labelTextAlignment,
-                          child: _buildAlignmentSelector())
-                    ]),
-                  _buildVerticalDivider(),
-                  Center(
-                      child: IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.more_vert),
-                          splashRadius: 16,
-                          tooltip:
-                              AppLocalizations.of(context)!.labelMoreOptions)),
-                ],
-              ),
-            ),
-          ),
+          child: widget.isFullWidth
+              ? _buildFullWidthScrollableToolbar()
+              : _buildConstrainedScrollableToolbar(),
         ),
       ),
     );
+  }
+
+  Widget _buildConstrainedScrollableToolbar() {
+    // Original desktop styling with subtle fade edges
+    return ShaderMask(
+      shaderCallback: (Rect bounds) {
+        return LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: <Color>[
+            Colors.transparent,
+            Colors.black,
+            Colors.black,
+            Colors.transparent
+          ],
+          stops: [0.0, 0.05, 0.95, 1.0],
+        ).createShader(bounds);
+      },
+      blendMode: BlendMode.dstIn,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: _buildToolbarButtons(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFullWidthScrollableToolbar() {
+    // Full-width mobile styling with prominent scroll indicators
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: _buildToolbarButtons(),
+          ),
+        ),
+        // Left arrow indicator
+        Positioned(
+          left: 0,
+          top: 0,
+          bottom: 0,
+          child: Container(
+            width: 20,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Theme.of(context).colorScheme.surface,
+                  Theme.of(context).colorScheme.surface.withOpacity(0.0),
+                ],
+              ),
+            ),
+            child: const Icon(
+              Icons.chevron_left,
+              size: 16,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+        // Right arrow indicator
+        Positioned(
+          right: 0,
+          top: 0,
+          bottom: 0,
+          child: Container(
+            width: 20,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerRight,
+                end: Alignment.centerLeft,
+                colors: [
+                  Theme.of(context).colorScheme.surface,
+                  Theme.of(context).colorScheme.surface.withOpacity(0.0),
+                ],
+              ),
+            ),
+            child: const Icon(
+              Icons.chevron_right,
+              size: 16,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildToolbarButtons() {
+    return [
+      if (_isConvertibleNode()) ...[
+        Tooltip(
+            message: AppLocalizations.of(context)!.labelTextBlockType,
+            child: _buildBlockTypeSelector()),
+        _buildVerticalDivider(),
+      ],
+      Center(
+          child: IconButton(
+              onPressed: _toggleBold,
+              icon: const Icon(Icons.format_bold),
+              splashRadius: 16,
+              tooltip: AppLocalizations.of(context)!.labelBold)),
+      Center(
+          child: IconButton(
+              onPressed: _toggleItalics,
+              icon: const Icon(Icons.format_italic),
+              splashRadius: 16,
+              tooltip: AppLocalizations.of(context)!.labelItalics)),
+      Center(
+          child: IconButton(
+              onPressed: _toggleStrikethrough,
+              icon: const Icon(Icons.strikethrough_s),
+              splashRadius: 16,
+              tooltip: AppLocalizations.of(context)!.labelStrikethrough)),
+      Center(
+          child: IconButton(
+              onPressed: _toggleSuperscript,
+              icon: const Icon(Icons.superscript),
+              splashRadius: 16,
+              tooltip: AppLocalizations.of(context)!.labelSuperscript)),
+      Center(
+          child: IconButton(
+              onPressed: _toggleSubscript,
+              icon: const Icon(Icons.subscript),
+              splashRadius: 16,
+              tooltip: AppLocalizations.of(context)!.labelSubscript)),
+      Center(
+          child: IconButton(
+              onPressed: _areMultipleLinksSelected() ? null : _onLinkPressed,
+              icon: const Icon(Icons.link),
+              color: _isSingleLinkSelected()
+                  ? const Color(0xFF007AFF)
+                  : IconTheme.of(context).color,
+              splashRadius: 16,
+              tooltip: AppLocalizations.of(context)!.labelLink)),
+      if (_isTextAlignable())
+        Row(mainAxisSize: MainAxisSize.min, children: [
+          _buildVerticalDivider(),
+          Tooltip(
+              message: AppLocalizations.of(context)!.labelTextAlignment,
+              child: _buildAlignmentSelector())
+        ]),
+      _buildVerticalDivider(),
+      Center(
+          child: IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.more_vert),
+              splashRadius: 16,
+              tooltip: AppLocalizations.of(context)!.labelMoreOptions)),
+    ];
   }
 
   Widget _buildAlignmentSelector() {
