@@ -288,42 +288,67 @@ class _ToolbarContentState extends State<ToolbarContent> {
   }
 
   void _toggleBold() {
+    final selection = widget.composer.selection;
+    if (selection == null || selection.isCollapsed) {
+      // TODO: Handle toggling for caret styling if desired, or simply do nothing.
+      // For now, do nothing if the selection is collapsed or null.
+      return;
+    }
     widget.editor.execute([
       ToggleTextAttributionsRequest(
-          documentRange: widget.composer.selection!,
-          attributions: {boldAttribution}),
+          documentRange: selection, attributions: {boldAttribution}),
     ]);
   }
 
   void _toggleItalics() {
+    final selection = widget.composer.selection;
+    if (selection == null || selection.isCollapsed) {
+      // TODO: Handle toggling for caret styling if desired, or simply do nothing.
+      // For now, do nothing if the selection is collapsed or null.
+      return;
+    }
     widget.editor.execute([
       ToggleTextAttributionsRequest(
-          documentRange: widget.composer.selection!,
-          attributions: {italicsAttribution}),
+          documentRange: selection, attributions: {italicsAttribution}),
     ]);
   }
 
   void _toggleStrikethrough() {
+    final selection = widget.composer.selection;
+    if (selection == null || selection.isCollapsed) {
+      // TODO: Handle toggling for caret styling if desired, or simply do nothing.
+      // For now, do nothing if the selection is collapsed or null.
+      return;
+    }
     widget.editor.execute([
       ToggleTextAttributionsRequest(
-          documentRange: widget.composer.selection!,
-          attributions: {strikethroughAttribution}),
+          documentRange: selection, attributions: {strikethroughAttribution}),
     ]);
   }
 
   void _toggleSuperscript() {
+    final selection = widget.composer.selection;
+    if (selection == null || selection.isCollapsed) {
+      // TODO: Handle toggling for caret styling if desired, or simply do nothing.
+      // For now, do nothing if the selection is collapsed or null.
+      return;
+    }
     widget.editor.execute([
       ToggleTextAttributionsRequest(
-          documentRange: widget.composer.selection!,
-          attributions: {superscriptAttribution}),
+          documentRange: selection, attributions: {superscriptAttribution}),
     ]);
   }
 
   void _toggleSubscript() {
+    final selection = widget.composer.selection;
+    if (selection == null || selection.isCollapsed) {
+      // TODO: Handle toggling for caret styling if desired, or simply do nothing.
+      // For now, do nothing if the selection is collapsed or null.
+      return;
+    }
     widget.editor.execute([
       ToggleTextAttributionsRequest(
-          documentRange: widget.composer.selection!,
-          attributions: {subscriptAttribution}),
+          documentRange: selection, attributions: {subscriptAttribution}),
     ]);
   }
 
