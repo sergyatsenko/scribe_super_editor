@@ -1,4 +1,4 @@
-import 'package:example/typing_robot.dart';
+import 'package:scribe/typing_robot.dart';
 import 'package:flutter/material.dart';
 import 'package:super_text_layout/super_text_layout.dart';
 import 'package:super_text_layout/super_text_layout_logging.dart';
@@ -39,7 +39,8 @@ class SuperTextExampleScreen extends StatefulWidget {
   State<SuperTextExampleScreen> createState() => _SuperTextExampleScreenState();
 }
 
-class _SuperTextExampleScreenState extends State<SuperTextExampleScreen> with TickerProviderStateMixin {
+class _SuperTextExampleScreenState extends State<SuperTextExampleScreen>
+    with TickerProviderStateMixin {
   static const _text = TextSpan(
     text: _textMessage,
     style: _textStyle,
@@ -219,7 +220,8 @@ class _SuperTextExampleScreenState extends State<SuperTextExampleScreen> with Ti
               TextLayoutSelectionHighlight(
                 textLayout: textLayout,
                 style: _primaryHighlightStyle,
-                selection: const TextSelection(baseOffset: 11, extentOffset: 21),
+                selection:
+                    const TextSelection(baseOffset: 11, extentOffset: 21),
               ),
             ],
           );
@@ -251,8 +253,10 @@ class _SuperTextExampleScreenState extends State<SuperTextExampleScreen> with Ti
               RainbowBuilder(builder: (context, color) {
                 return TextLayoutSelectionHighlight(
                   textLayout: textLayout,
-                  style: _primaryHighlightStyle.copyWith(color: color.withValues(alpha: 0.2)),
-                  selection: const TextSelection(baseOffset: 11, extentOffset: 21),
+                  style: _primaryHighlightStyle.copyWith(
+                      color: color.withValues(alpha: 0.2)),
+                  selection:
+                      const TextSelection(baseOffset: 11, extentOffset: 21),
                 );
               }),
             ],
@@ -337,17 +341,20 @@ class _SuperTextExampleScreenState extends State<SuperTextExampleScreen> with Ti
               TextLayoutSelectionHighlight(
                 textLayout: textLayout,
                 style: _primaryHighlightStyle,
-                selection: const TextSelection(baseOffset: 11, extentOffset: 21),
+                selection:
+                    const TextSelection(baseOffset: 11, extentOffset: 21),
               ),
               TextLayoutSelectionHighlight(
                 textLayout: textLayout,
                 style: _johnHighlightStyle,
-                selection: const TextSelection(baseOffset: 58, extentOffset: 65),
+                selection:
+                    const TextSelection(baseOffset: 58, extentOffset: 65),
               ),
               TextLayoutSelectionHighlight(
                 textLayout: textLayout,
                 style: _sallyHighlightStyle,
-                selection: const TextSelection(baseOffset: 79, extentOffset: 120),
+                selection:
+                    const TextSelection(baseOffset: 79, extentOffset: 120),
               ),
             ],
           );
