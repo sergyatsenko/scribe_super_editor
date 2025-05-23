@@ -5,7 +5,7 @@ import 'package:super_editor/super_editor.dart';
 
 import 'package:scribe/core/theme_provider.dart';
 import 'package:scribe/features/editor/ui/floating_toolbar.dart'
-    as floating_toolbar;
+    as ftb; // Renamed to avoid conflict with local ToolbarContent
 import 'package:scribe/features/clipboard/application/clipboard_service.dart';
 import 'package:scribe/features/editor/application/custom_paste_plugin.dart';
 import 'package:scribe/features/editor/application/paste_service.dart';
@@ -136,11 +136,21 @@ class _EditorScreenState extends State<EditorScreen> {
   bool get _isIOS => defaultTargetPlatform == TargetPlatform.iOS;
 
   void _hideOrShowToolbar() {
-    if (_gestureMode == DocumentGestureMode.mouse || _isIOS) {
-      // Desktop and iOS - use our custom floating toolbar
+    if (_isIOS) {
+      // On iOS, the fixed/keyboard-aware toolbar is handled by _buildIOSFixedToolbar
+      // and its visibility is controlled within that widget based on focus/keyboard state.
+      // The desktop floating toolbar should not be shown.
+      _hideEditorToolbar(); // Ensure desktop toolbar is hidden if it was somehow shown
+      _hideImageToolbar(); // Ensure desktop image toolbar is hidden
+      return;
+    }
+
+    // Original logic for desktop (mouse mode)
+    if (_gestureMode == DocumentGestureMode.mouse) {
       _hideOrShowDesktopToolbar();
     }
-    // Android and other mobile platforms can use default behavior
+    // Android and other non-iOS mobile platforms can use default behavior or have their own logic.
+    // For now, this means no explicit toolbar for them from this method.
   }
 
   void _hideOrShowDesktopToolbar() {
@@ -299,14 +309,29 @@ class _EditorScreenState extends State<EditorScreen> {
           );
         }
 
+        // For iOS, the main layout will be wrapped in a Stack to include the fixed/keyboard-aware toolbar.
+        // The desktop floating toolbar is handled by OverlayPortal as before.
+        Widget mainContent = _buildLayout();
+        if (_isIOS) {
+          mainContent = Stack(
+            children: [
+              mainContent, // The main editor layout
+              _buildIOSFixedToolbar(), // The new iOS toolbar
+            ],
+          );
+        }
+
         return Scaffold(
           body: OverlayPortal(
             controller: _textFormatBarOverlayController,
-            overlayChildBuilder: _buildFloatingToolbar,
+            overlayChildBuilder:
+                _buildFloatingToolbar, // This is for desktop/non-iOS
             child: OverlayPortal(
               controller: _imageFormatBarOverlayController,
-              overlayChildBuilder: _buildImageToolbar,
-              child: _buildLayout(),
+              overlayChildBuilder:
+                  _buildImageToolbar, // This is for desktop/non-iOS
+              child:
+                  mainContent, // mainContent now includes the Stack for iOS if applicable
             ),
           ),
         );
@@ -315,27 +340,50 @@ class _EditorScreenState extends State<EditorScreen> {
   }
 
   Widget _buildLayout() {
-    if (_isIOS && !_editorController.isDistractionFree) {
-      // On iOS, use only the floating toolbar from iOS controls scope
-      // Don't show the bottom toolbar as it conflicts with the floating one
-      return Column(
-        children: [
+    // Simplified: Always build the editor area. iOS toolbar is handled by the Stack in `build()`.
+    // Desktop/other platforms show the EditorToolbar if not distraction-free.
+    return Column(
+      children: [
+        if (!_editorController.isDistractionFree) ...[
           _buildAppBar(),
-          Expanded(child: _buildEditor()),
-        ],
-      );
-    } else {
-      // On other platforms, use traditional top toolbar
-      return Column(
-        children: [
-          if (!_editorController.isDistractionFree) ...[
-            _buildAppBar(),
+          if (!_isIOS) // Only show EditorToolbar for non-iOS platforms
             EditorToolbar(controller: _editorController),
-          ],
-          Expanded(child: _buildEditor()),
         ],
-      );
+        Expanded(child: _buildEditor()),
+      ],
+    );
+  }
+
+  Widget _buildIOSFixedToolbar() {
+    if (!_editorController.isInitialized || _editorController.editor == null) {
+      return const SizedBox.shrink();
     }
+    return KeyboardHeightBuilder(
+      builder: (context, keyboardHeight) {
+        final bool isToolbarActuallyVisible =
+            _editorFocusNode.hasFocus || keyboardHeight > 0;
+        if (!isToolbarActuallyVisible) {
+          return const SizedBox.shrink(); // Don't even position if not visible
+        }
+
+        // Position the toolbar directly.
+        // The Stack in the main build method provides the context.
+        // If the Scaffold resizes (default), the Stack's bottom is now just above the keyboard.
+        // So, bottom: 0 should place the toolbar there.
+        return Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0, // Changed from keyboardHeight to 0
+          child: ftb.ToolbarContent(
+            editorViewportKey: _viewportKey,
+            editorFocusNode: _editorFocusNode,
+            editor: _editorController.editor!,
+            document: _editorController.document!,
+            composer: _editorController.composer!,
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildKeyboardAwareToolbar() {
@@ -392,23 +440,20 @@ class _EditorScreenState extends State<EditorScreen> {
 
     print('[_EditorScreenState] ✅ Creating SuperEditor with CustomPastePlugin');
 
-    Widget superEditor = SuperEditor(
+    Widget superEditorWidget = SuperEditor(
       key: _editorKey,
       editor: editor,
       focusNode: _editorFocusNode,
       scrollController: _scrollController,
       documentLayoutKey: _docLayoutKey,
       selectionLayerLinks: _selectionLayerLinks,
-      // Use default component builders - the style for code blocks will be defined in the stylesheet
       componentBuilders: defaultComponentBuilders,
       gestureMode: _gestureMode,
       plugins: {
-        // Create a custom paste plugin with a listener to force refresh after paste
         CustomPastePlugin(
           clipboardService: _clipboardService,
           onPasteComplete: () {
             print('[_EditorScreenState] Paste complete callback received');
-            // Force an immediate UI rebuild after paste
             if (mounted) {
               setState(() {
                 print('[_EditorScreenState] Forced rebuild after paste');
@@ -420,16 +465,41 @@ class _EditorScreenState extends State<EditorScreen> {
       stylesheet: _buildStylesheet(),
     );
 
-    // Don't wrap with iOS controls scope - use our own floating toolbar instead
-    return KeyedSubtree(
-      key: _viewportKey,
-      child: Container(
-        color: _editorController.isDistractionFree
-            ? Theme.of(context).colorScheme.surface
-            : null,
-        child: superEditor,
-      ),
-    );
+    // Determine padding for iOS
+    if (_isIOS) {
+      return KeyboardHeightBuilder(
+        builder: (context, keyboardHeight) {
+          // When keyboard is hidden, add padding for the fixed toolbar at the bottom.
+          // Toolbar height is 40, add a bit more for breathing room.
+          final double bottomPadding = (keyboardHeight == 0) ? 50.0 : 0.0;
+
+          return Padding(
+            padding: EdgeInsets.only(bottom: bottomPadding),
+            child: KeyedSubtree(
+              key:
+                  _viewportKey, // Assuming _viewportKey is still relevant for the editor area
+              child: Container(
+                color: _editorController.isDistractionFree
+                    ? Theme.of(context).colorScheme.surface
+                    : null,
+                child: superEditorWidget,
+              ),
+            ),
+          );
+        },
+      );
+    } else {
+      // For non-iOS platforms, use the existing structure
+      return KeyedSubtree(
+        key: _viewportKey,
+        child: Container(
+          color: _editorController.isDistractionFree
+              ? Theme.of(context).colorScheme.surface
+              : null,
+          child: superEditorWidget,
+        ),
+      );
+    }
   }
 
   Widget _buildFloatingToolbar(BuildContext context) {
@@ -441,7 +511,7 @@ class _EditorScreenState extends State<EditorScreen> {
       return const SizedBox();
     }
 
-    return floating_toolbar.EditorToolbar(
+    return ftb.EditorToolbar(
       editorViewportKey: _viewportKey,
       anchor: _selectionLayerLinks.expandedSelectionBoundsLink,
       editorFocusNode: _editorFocusNode,
@@ -461,7 +531,7 @@ class _EditorScreenState extends State<EditorScreen> {
       return const SizedBox();
     }
 
-    return floating_toolbar.ImageFormatToolbar(
+    return ftb.ImageFormatToolbar(
       anchor: _imageSelectionAnchor,
       composer: composer,
       setWidth: (nodeId, width) {
