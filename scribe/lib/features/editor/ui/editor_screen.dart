@@ -8,6 +8,8 @@ import 'package:scribe/features/editor/ui/floating_toolbar.dart'
     as floating_toolbar;
 import 'package:scribe/features/clipboard/application/clipboard_service.dart';
 import 'package:scribe/features/editor/application/custom_paste_plugin.dart';
+import 'package:scribe/features/editor/application/paste_service.dart';
+import 'package:scribe/features/editor/application/custom_paste_request_handler.dart';
 import 'package:scribe/features/editor/application/editor_controller.dart';
 import 'package:scribe/features/editor/domain/document_repository.dart';
 import 'package:scribe/features/editor/ui/editor_toolbar.dart';
@@ -23,6 +25,7 @@ class _EditorScreenState extends State<EditorScreen> {
   late final EditorController _editorController;
   late final FocusNode _editorFocusNode;
   late final ClipboardService _clipboardService;
+  late final PasteService _pasteService;
   late final ScrollController _scrollController;
 
   // Add a key to force editor rebuilds on demand
@@ -48,11 +51,20 @@ class _EditorScreenState extends State<EditorScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Initialize services
+    _clipboardService = ClipboardService();
+    _pasteService = PasteService(clipboardService: _clipboardService);
+
+    // Create custom request handler for rich text/markdown paste
+    final customPasteRequestHandler =
+        createCustomPasteRequestHandler(_pasteService);
+
     _editorController = EditorController(
       documentRepository: context.read<DocumentRepository>(),
+      customRequestHandlers: [customPasteRequestHandler],
     );
     _editorFocusNode = FocusNode();
-    _clipboardService = ClipboardService();
     _scrollController = ScrollController();
 
     _selectionLayerLinks = SelectionLayerLinks();

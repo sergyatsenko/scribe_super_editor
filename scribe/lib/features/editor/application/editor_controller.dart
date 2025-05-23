@@ -4,9 +4,13 @@ import 'package:super_editor/super_editor.dart';
 import 'package:scribe/features/editor/domain/document_repository.dart';
 
 class EditorController extends ChangeNotifier {
-  EditorController({required this.documentRepository});
+  EditorController({
+    required this.documentRepository,
+    List<EditRequestHandler>? customRequestHandlers,
+  }) : _customRequestHandlers = customRequestHandlers ?? [];
 
   final DocumentRepository documentRepository;
+  final List<EditRequestHandler> _customRequestHandlers;
 
   Editor? _editor;
   MutableDocument? _document;
@@ -40,10 +44,24 @@ class EditorController extends ChangeNotifier {
         );
 
     _composer = MutableDocumentComposer();
-    _editor = createDefaultDocumentEditor(
-      document: _document!,
-      composer: _composer!,
-    );
+
+    if (_customRequestHandlers.isNotEmpty) {
+      // Create editor with custom request handlers + default handlers
+      _editor = Editor(
+        editables: {
+          Editor.documentKey: _document!,
+          Editor.composerKey: _composer!,
+        },
+        requestHandlers: [..._customRequestHandlers, ...defaultRequestHandlers],
+        reactionPipeline: List.from(defaultEditorReactions),
+      );
+    } else {
+      // Use default editor
+      _editor = createDefaultDocumentEditor(
+        document: _document!,
+        composer: _composer!,
+      );
+    }
 
     // Initialize the listener, ensuring the signature matches DocumentChangeListener
     _docListener = (DocumentChangeLog changeLog) {
@@ -60,10 +78,27 @@ class EditorController extends ChangeNotifier {
         print(
           '[EditorController] Re-creating editor instance due to document change.',
         );
-        _editor = createDefaultDocumentEditor(
-          document: _document!,
-          composer: _composer!,
-        );
+
+        if (_customRequestHandlers.isNotEmpty) {
+          // Create editor with custom request handlers + default handlers
+          _editor = Editor(
+            editables: {
+              Editor.documentKey: _document!,
+              Editor.composerKey: _composer!,
+            },
+            requestHandlers: [
+              ..._customRequestHandlers,
+              ...defaultRequestHandlers
+            ],
+            reactionPipeline: List.from(defaultEditorReactions),
+          );
+        } else {
+          // Use default editor
+          _editor = createDefaultDocumentEditor(
+            document: _document!,
+            composer: _composer!,
+          );
+        }
       }
 
       notifyListeners(); // Notify listeners AFTER potential editor re-creation
