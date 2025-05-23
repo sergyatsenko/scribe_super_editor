@@ -1,12 +1,9 @@
 import 'package:scribe/demos/components/demo_text_with_hint.dart';
 import 'package:scribe/demos/components/demo_unselectable_hr.dart';
 import 'package:scribe/demos/debugging/simple_deltas_input.dart';
-import 'package:scribe/demos/demo_animated_task_height.dart';
-import 'package:scribe/demos/demo_app_shortcuts.dart';
 import 'package:scribe/demos/demo_empty_document.dart';
 import 'package:scribe/demos/demo_markdown_serialization.dart';
 import 'package:scribe/demos/demo_paragraphs.dart';
-import 'package:scribe/demos/demo_rtl.dart';
 import 'package:scribe/demos/demo_selectable_text.dart';
 import 'package:scribe/demos/editor_configs/demo_mobile_editing_android.dart';
 import 'package:scribe/demos/editor_configs/demo_mobile_editing_ios.dart';
@@ -22,9 +19,7 @@ import 'package:scribe/demos/in_the_lab/selected_text_colors_demo.dart';
 import 'package:scribe/demos/in_the_lab/spelling_error_decorations.dart';
 import 'package:scribe/demos/interaction_spot_checks/toolbar_following_content_in_layer.dart';
 import 'package:scribe/demos/interaction_spot_checks/url_launching_spot_checks.dart';
-import 'package:scribe/demos/mobile_chat/demo_mobile_chat.dart';
 import 'package:scribe/demos/scrolling/demo_task_and_chat_with_customscrollview.dart';
-import 'package:scribe/demos/sliver_example_editor.dart';
 import 'package:scribe/demos/styles/demo_doc_styles.dart';
 import 'package:scribe/demos/super_reader/demo_super_reader.dart';
 import 'package:scribe/demos/supertextfield/demo_textfield.dart';
@@ -36,7 +31,6 @@ import 'package:logging/logging.dart';
 import 'package:super_editor/super_editor.dart';
 
 import 'demos/demo_attributed_text.dart';
-import 'demos/demo_document_loses_focus.dart';
 import 'demos/demo_switch_document_content.dart';
 import 'demos/super_reader/demo_read_only_scrolling_document.dart';
 import 'demos/supertextfield/android/demo_superandroidtextfield.dart';
@@ -221,37 +215,9 @@ final _menu = <_MenuGroup>[
       ),
       _MenuItem(
         icon: Icons.description,
-        title: 'Sliver Editor Demo',
-        pageBuilder: (context) {
-          return SliverExampleEditor();
-        },
-      ),
-      _MenuItem(
-        icon: Icons.description,
-        title: 'Chat Demo',
-        pageBuilder: (context) {
-          return MobileChatDemo();
-        },
-      ),
-      _MenuItem(
-        icon: Icons.description,
         title: 'Switch Docs Demo',
         pageBuilder: (context) {
           return SwitchDocumentDemo();
-        },
-      ),
-      _MenuItem(
-        icon: Icons.description,
-        title: 'Lose Focus Demo',
-        pageBuilder: (context) {
-          return LoseFocusDemo();
-        },
-      ),
-      _MenuItem(
-        icon: Icons.shortcut,
-        title: 'App Shortcuts',
-        pageBuilder: (context) {
-          return AppShortcutsDemo();
         },
       ),
       _MenuItem(
@@ -263,23 +229,9 @@ final _menu = <_MenuGroup>[
       ),
       _MenuItem(
         icon: Icons.description,
-        title: 'RTL Demo',
-        pageBuilder: (context) {
-          return RTLDemo();
-        },
-      ),
-      _MenuItem(
-        icon: Icons.description,
         title: 'Empty Document',
         pageBuilder: (context) {
           return EmptyDocumentDemo();
-        },
-      ),
-      _MenuItem(
-        icon: Icons.description,
-        title: 'Animated task height demo',
-        pageBuilder: (context) {
-          return AnimatedTaskHeightDemo();
         },
       ),
     ],
