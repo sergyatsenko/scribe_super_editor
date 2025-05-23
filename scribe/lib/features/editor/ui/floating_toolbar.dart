@@ -569,108 +569,113 @@ class _EditorToolbarState extends State<EditorToolbar> {
   }
 
   Widget _buildToolbar() {
-    return ConstrainedBox(
-      constraints:
-          const BoxConstraints(maxWidth: 350), // Limit width for mobile
-      child: IntrinsicWidth(
-        child: Material(
-          shape: const StadiumBorder(),
-          elevation: 5,
-          clipBehavior: Clip.hardEdge,
-          child: SizedBox(
-            height: 40,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Only allow the user to select a new type of text node if
-                  // the currently selected node can be converted.
-                  if (_isConvertibleNode()) ...[
-                    Tooltip(
-                      message: AppLocalizations.of(context)!.labelTextBlockType,
-                      child: _buildBlockTypeSelector(),
-                    ),
-                    _buildVerticalDivider(),
-                  ],
-                  Center(
-                    child: IconButton(
-                      onPressed: _toggleBold,
-                      icon: const Icon(Icons.format_bold),
-                      splashRadius: 16,
-                      tooltip: AppLocalizations.of(context)!.labelBold,
-                    ),
+    // Wrap the toolbar content with a Material widget for consistent styling.
+    return Material(
+      shape: const StadiumBorder(),
+      elevation: 5,
+      clipBehavior: Clip.hardEdge,
+      // Constrain the maximum width of the toolbar.
+      // This allows the SingleChildScrollView to know its bounds.
+      child: ConstrainedBox(
+        constraints:
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9),
+        child: SizedBox(
+          height: 40,
+          // Enable horizontal scrolling for the toolbar items.
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            // Use a Row to layout the toolbar items horizontally.
+            // mainAxisSize.min ensures the Row takes up only necessary space if content is smaller than max width.
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Only allow the user to select a new type of text node if
+                // the currently selected node can be converted.
+                if (_isConvertibleNode()) ...[
+                  Tooltip(
+                    message: AppLocalizations.of(context)!.labelTextBlockType,
+                    child: _buildBlockTypeSelector(),
                   ),
-                  Center(
-                    child: IconButton(
-                      onPressed: _toggleItalics,
-                      icon: const Icon(Icons.format_italic),
-                      splashRadius: 16,
-                      tooltip: AppLocalizations.of(context)!.labelItalics,
-                    ),
-                  ),
-                  Center(
-                    child: IconButton(
-                      onPressed: _toggleStrikethrough,
-                      icon: const Icon(Icons.strikethrough_s),
-                      splashRadius: 16,
-                      tooltip: AppLocalizations.of(context)!.labelStrikethrough,
-                    ),
-                  ),
-                  Center(
-                    child: IconButton(
-                      onPressed: _toggleSuperscript,
-                      icon: const Icon(Icons.superscript),
-                      splashRadius: 16,
-                      tooltip: AppLocalizations.of(context)!.labelSuperscript,
-                    ),
-                  ),
-                  Center(
-                    child: IconButton(
-                      onPressed: _toggleSubscript,
-                      icon: const Icon(Icons.subscript),
-                      splashRadius: 16,
-                      tooltip: AppLocalizations.of(context)!.labelSubscript,
-                    ),
-                  ),
-                  Center(
-                    child: IconButton(
-                      onPressed:
-                          _areMultipleLinksSelected() ? null : _onLinkPressed,
-                      icon: const Icon(Icons.link),
-                      color: _isSingleLinkSelected()
-                          ? const Color(0xFF007AFF)
-                          : IconTheme.of(context).color,
-                      splashRadius: 16,
-                      tooltip: AppLocalizations.of(context)!.labelLink,
-                    ),
-                  ),
-                  // Only display alignment controls if the currently selected text
-                  // node respects alignment. List items, for example, do not.
-                  if (_isTextAlignable()) //
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildVerticalDivider(),
-                        Tooltip(
-                          message:
-                              AppLocalizations.of(context)!.labelTextAlignment,
-                          child: _buildAlignmentSelector(),
-                        ),
-                      ],
-                    ),
-
                   _buildVerticalDivider(),
-                  Center(
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.more_vert),
-                      splashRadius: 16,
-                      tooltip: AppLocalizations.of(context)!.labelMoreOptions,
-                    ),
-                  ),
                 ],
-              ),
+                Center(
+                  child: IconButton(
+                    onPressed: _toggleBold,
+                    icon: const Icon(Icons.format_bold),
+                    splashRadius: 16,
+                    tooltip: AppLocalizations.of(context)!.labelBold,
+                  ),
+                ),
+                Center(
+                  child: IconButton(
+                    onPressed: _toggleItalics,
+                    icon: const Icon(Icons.format_italic),
+                    splashRadius: 16,
+                    tooltip: AppLocalizations.of(context)!.labelItalics,
+                  ),
+                ),
+                Center(
+                  child: IconButton(
+                    onPressed: _toggleStrikethrough,
+                    icon: const Icon(Icons.strikethrough_s),
+                    splashRadius: 16,
+                    tooltip: AppLocalizations.of(context)!.labelStrikethrough,
+                  ),
+                ),
+                Center(
+                  child: IconButton(
+                    onPressed: _toggleSuperscript,
+                    icon: const Icon(Icons.superscript),
+                    splashRadius: 16,
+                    tooltip: AppLocalizations.of(context)!.labelSuperscript,
+                  ),
+                ),
+                Center(
+                  child: IconButton(
+                    onPressed: _toggleSubscript,
+                    icon: const Icon(Icons.subscript),
+                    splashRadius: 16,
+                    tooltip: AppLocalizations.of(context)!.labelSubscript,
+                  ),
+                ),
+                Center(
+                  child: IconButton(
+                    onPressed:
+                        _areMultipleLinksSelected() ? null : _onLinkPressed,
+                    icon: const Icon(Icons.link),
+                    color: _isSingleLinkSelected()
+                        ? const Color(0xFF007AFF)
+                        : IconTheme.of(context).color,
+                    splashRadius: 16,
+                    tooltip: AppLocalizations.of(context)!.labelLink,
+                  ),
+                ),
+                // Only display alignment controls if the currently selected text
+                // node respects alignment. List items, for example, do not.
+                if (_isTextAlignable()) //
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildVerticalDivider(),
+                      Tooltip(
+                        message:
+                            AppLocalizations.of(context)!.labelTextAlignment,
+                        child: _buildAlignmentSelector(),
+                      ),
+                    ],
+                  ),
+
+                _buildVerticalDivider(),
+                Center(
+                  child: IconButton(
+                    onPressed: () {},
+                    icon: const Icon(Icons.more_vert),
+                    splashRadius: 16,
+                    tooltip: AppLocalizations.of(context)!.labelMoreOptions,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
