@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:scribe/demos/infrastructure/super_editor_item_selector.dart';
 import 'package:scribe/logging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:scribe/l10n/app_localizations.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
 import 'package:overlord/follow_the_leader.dart';
 import 'package:super_editor/super_editor.dart';
@@ -846,6 +846,8 @@ class ImageFormatToolbar extends StatefulWidget {
 }
 
 class _ImageFormatToolbarState extends State<ImageFormatToolbar> {
+  // Access to localization in this class
+  AppLocalizations get appLocalizations => AppLocalizations.of(context)!;
   void _makeImageConfined() {
     widget.setWidth(widget.composer.selection!.extent.nodeId, null);
   }
@@ -897,7 +899,7 @@ class _ImageFormatToolbarState extends State<ImageFormatToolbar> {
                   onPressed: _makeImageConfined,
                   icon: const Icon(Icons.photo_size_select_large),
                   splashRadius: 16,
-                  tooltip: AppLocalizations.of(context)!.labelLimitedWidth,
+                  tooltip: appLocalizations.labelLimitedWidth,
                 ),
               ),
               Center(
@@ -905,7 +907,7 @@ class _ImageFormatToolbarState extends State<ImageFormatToolbar> {
                   onPressed: _makeImageFullBleed,
                   icon: const Icon(Icons.photo_size_select_actual),
                   splashRadius: 16,
-                  tooltip: AppLocalizations.of(context)!.labelFullWidth,
+                  tooltip: appLocalizations.labelFullWidth,
                 ),
               ),
             ],
