@@ -57,8 +57,22 @@ class _EditorScreenState extends State<EditorScreen> {
     _pasteService = PasteService(clipboardService: _clipboardService);
 
     // Create custom request handler for rich text/markdown paste
-    final customPasteRequestHandler =
-        createCustomPasteRequestHandler(_pasteService);
+    final customPasteRequestHandler = createCustomPasteRequestHandler(
+      _pasteService,
+      onPasteComplete: () {
+        print(
+            '[_EditorScreenState] Context menu paste complete callback received');
+        // Force an immediate UI rebuild after paste by incrementing the rebuild count
+        if (mounted) {
+          setState(() {
+            // Increment the rebuild counter to force a complete widget rebuild
+            _editorRebuildCount++;
+            print(
+                '[_EditorScreenState] Forced rebuild after context menu paste. New count: $_editorRebuildCount');
+          });
+        }
+      },
+    );
 
     _editorController = EditorController(
       documentRepository: context.read<DocumentRepository>(),
