@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:scribe/features/editor/application/editor_controller.dart';
 
@@ -15,15 +16,29 @@ class EditorToolbar extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
+        final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
+
         return Container(
           height: 48,
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            border: Border(
-              bottom: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-              ),
-            ),
+            border: isIOS
+                ? Border(
+                    top: BorderSide(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .outline
+                          .withOpacity(0.2),
+                    ),
+                  )
+                : Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .outline
+                          .withOpacity(0.2),
+                    ),
+                  ),
           ),
           child: Row(
             children: [

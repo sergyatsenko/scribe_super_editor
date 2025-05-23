@@ -138,6 +138,7 @@ class _EditorScreenState extends State<EditorScreen> {
   }
 
   bool get _isMobile => _gestureMode != DocumentGestureMode.mouse;
+  bool get _isIOS => defaultTargetPlatform == TargetPlatform.iOS;
 
   void _hideOrShowToolbar() {
     if (_gestureMode != DocumentGestureMode.mouse) {
@@ -288,16 +289,59 @@ class _EditorScreenState extends State<EditorScreen> {
             child: OverlayPortal(
               controller: _imageFormatBarOverlayController,
               overlayChildBuilder: _buildImageToolbar,
-              child: Column(
-                children: [
-                  if (!_editorController.isDistractionFree) ...[
-                    _buildAppBar(),
-                    EditorToolbar(controller: _editorController),
-                  ],
-                  Expanded(child: _buildEditor()),
-                ],
-              ),
+              child: _buildLayout(),
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLayout() {
+    if (_isIOS && !_editorController.isDistractionFree) {
+      // On iOS, use overlay approach like SuperEditor's mobile toolbar
+      return Stack(
+        children: [
+          Column(
+            children: [
+              _buildAppBar(),
+              Expanded(child: _buildEditor()),
+            ],
+          ),
+          // Position toolbar at bottom using the same approach as SuperEditor
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _buildKeyboardAwareToolbar(),
+          ),
+        ],
+      );
+    } else {
+      // On other platforms, use traditional top toolbar
+      return Column(
+        children: [
+          if (!_editorController.isDistractionFree) ...[
+            _buildAppBar(),
+            EditorToolbar(controller: _editorController),
+          ],
+          Expanded(child: _buildEditor()),
+        ],
+      );
+    }
+  }
+
+  Widget _buildKeyboardAwareToolbar() {
+    // Use SuperEditor's KeyboardHeightBuilder for proper keyboard detection
+    return KeyboardHeightBuilder(
+      builder: (context, keyboardHeight) {
+        return Padding(
+          // Add padding that takes up the height of the software keyboard so
+          // that the toolbar sits just above the keyboard.
+          padding: EdgeInsets.only(bottom: keyboardHeight),
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: EditorToolbar(controller: _editorController),
           ),
         );
       },
